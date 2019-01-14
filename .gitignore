@@ -1,0 +1,7 @@
+Makefile
+*.so
+
+# junk
+*.DS_Store
+*.swp
+*.swo
