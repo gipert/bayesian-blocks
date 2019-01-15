@@ -19,15 +19,16 @@ int main() {
     // testing with ROOT histogram
     TFile f("test.root");
     auto h = dynamic_cast<TH1D*>(f.Get("hmodel_ch1"));
-    h = dynamic_cast<TH1D*>(h->Rebin(2)); // or it takes too long...
+    h = dynamic_cast<TH1D*>(h->Rebin(4)); // or it takes too long...
     std::cout << "Rebinning..." << std::endl;
-    auto hr = dynamic_cast<TH1D*>(BayesianBlocks::rebin(h, 0.01, true));
+    // auto hr = dynamic_cast<TH1D*>(BayesianBlocks::rebin(h, 0.01, true));
+    BayesianBlocks::rebin(h, 0.01, true);
     std::cout << "\nDone!\n";
 
-    TCanvas c;
-    h->GetYaxis()->SetRangeUser(1E-5, 1E4);
-    h->Draw("HIST");
-    hr->Draw("SAME HIST");
-    c.SetLogy();
-    c.SaveAs("test.pdf");
+    // TCanvas c;
+    // h->GetYaxis()->SetRangeUser(1E-5, 1E4);
+    // h->Draw("HIST");
+    // hr->Draw("SAME HIST");
+    // c.SetLogy();
+    // c.SaveAs("test.pdf");
 }

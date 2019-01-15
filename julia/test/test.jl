@@ -1,7 +1,7 @@
-using StatsBase, Plots
-import GR
+using StatsBase#, Plots
+#import GR
 
-include("bayesian_blocks.jl")
+include("../bayesian_blocks.jl")
 
 function test(range=(100, 5300), approx=false, binning=1)
 

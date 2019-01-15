@@ -1,0 +1,48 @@
+# .travis.yaml for gipert/bayesian-blocks
+#
+# Author: Luigi Pertoldi - luigi.pertoldi@hotmail.it
+# Created: Tue 15 Jan 2019
+#
+
+notifications:
+  - email: false
+
+branches:
+  only:
+    - master
+
+os: linux
+
+matrix:
+  include:
+
+    - os: linux
+      language: cpp
+      compiler: gcc
+            sudo: required
+      services: docker
+      env: DOCKER_IMAGE=rootproject/root-ubuntu16
+      before_install:
+        - docker pull "$DOCKER_IMAGE"
+        - export DOCKER_INSTANCE=`docker run -it -d "$DOCKER_IMAGE" /bin/bash`
+        - docker cp . "$DOCKER_INSTANCE:/root/bayesian-blocks"
+      script:
+        - docker exec "$DOCKER_INSTANCE" /bin/sh -c \
+            "cd /root/bayesian-blocks/cpp/test && ./run_tests.sh"
+
+    - os: osx
+      language: cpp
+      compiler: clang
+      addons:
+        homebrew:
+          packages:
+            - root
+      script: cd cpp/test && ./run_tests.sh
+
+    - os: linux
+      language: julia
+      julia: 1.0
+      before_install: julia -e 'using Pkg; Pkg.add("StatsBase"); Pkg.add("ProgressMeter")'
+      script: cd julia/test/ && ./run_tests.sh
+
+# vim: tabstop=2 shiftwidth=2 expandtab
