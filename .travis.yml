@@ -19,7 +19,7 @@ matrix:
     - os: linux
       language: cpp
       compiler: gcc
-            sudo: required
+      sudo: required
       services: docker
       env: DOCKER_IMAGE=rootproject/root-ubuntu16
       before_install:
