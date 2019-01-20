@@ -12,7 +12,7 @@ bool equal(std::vector<double> a, std::vector<double> b, double eps);
 
 int main() {
 
-    bool passed = true;
+    int exit_status = 0;
     std::ifstream fin("test.dat");
     double a;
     std::vector<double> v;
@@ -22,8 +22,8 @@ int main() {
     if (!equal(r, {-3.48528, -1.87114, -1.36282, -0.677218,
                    0.659105, 1.39771, 4.06582, 5.60912,
                    6.17286, 7.76634, 9.91696}, 1E-04)) {
-        std::cerr << "ERROR: test 1 not passed.\n";
-        passed = false;
+        std::cerr << "ERROR: test 1 not exit_status.\n";
+        exit_status = 1;
     }
 
     // testing with ROOT histogram
@@ -35,11 +35,11 @@ int main() {
     for (auto& i : w) std::cout << i << " ";
 
     if (!equal(w, {-2.935, -1.7, -1.18, -0.66, 0.64, 1.42, 4.02, 5.58, 6.23, 7.79, 9.935}, 1E-03)) {
-        std::cerr << "ERROR: test 2 not passed.\n";
-        passed = false;
+        std::cerr << "ERROR: test 2 not exit_status.\n";
+        exit_status = 2;
     }
 
-    return passed;
+    return exit_status;
 }
 
 bool equal(std::vector<double> a, std::vector<double> b, double eps) {
