@@ -1,41 +1,51 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <iterator>
 
 #include "../bayesian_blocks.hh"
 #include "TFile.h"
 #include "TH1D.h"
 #include "TCanvas.h"
 
+bool equal(std::vector<double> a, std::vector<double> b, double eps);
+
 int main() {
 
+    bool passed = true;
     std::ifstream fin("test.dat");
     double a;
     std::vector<double> v;
     while (fin >> a) v.emplace_back(a);
 
     auto r = BayesianBlocks::blocks(v, 0.01, false, true);
-    std::cout << "Bin edges: ";
-    for (auto& i : r) std::cout << i << " "; std::cout << std::endl;
-
-    std::vector<double> w = {1, 2, 3, 3, 2, 7, 6, 5, 9, 6, 5, 5, 6, 4, 7, 3, 5, 4, 3, 6, 5, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3};
-    auto rr = BayesianBlocks::blocks(w, 0.01, false, true);
-    std::cout << "Bin edges: ";
-    for (auto& i : rr) std::cout << i << " "; std::cout << std::endl;
+    if (!equal(r, {-3.48528, -1.87114, -1.36282, -0.677218,
+                   0.659105, 1.39771, 4.06582, 5.60912,
+                   6.17286, 7.76634, 9.91696}, 1E-04)) {
+        std::cerr << "ERROR: test 1 not passed.\n";
+        passed = false;
+    }
 
     // testing with ROOT histogram
-    TFile f("test.root");
-    auto h = dynamic_cast<TH1D*>(f.Get("hmodel_ch1"));
-    h = dynamic_cast<TH1D*>(h->Rebin(2)); // or it takes too long...
-    std::cout << "Rebinning..." << std::endl;
-    auto hr = dynamic_cast<TH1D*>(BayesianBlocks::rebin(h, 0.1, true, true));
-    // BayesianBlocks::rebin(h, 0.01, true);
-    std::cout << "\nDone!\n";
+    TH1D h("hist", "hist", 100, -3, 10);
+    for (auto& val : v) h.Fill(val);
+    auto hr = dynamic_cast<TH1D*>(BayesianBlocks::rebin(&h, 0.01, false, true));
+    auto edges = hr->GetXaxis()->GetXbins()->GetArray();
+    std::vector<double> w(edges, edges + hr->GetNbinsX()+1);
+    for (auto& i : w) std::cout << i << " ";
 
-    TCanvas c;
-    h->GetYaxis()->SetRangeUser(1E-5, 1E4);
-    h->Draw("HIST");
-    hr->Draw("HIST SAME");
-    c.SetLogy();
-    c.SaveAs("test.pdf");
+    if (!equal(w, {-2.935, -1.7, -1.18, -0.66, 0.64, 1.42, 4.02, 5.58, 6.23, 7.79, 9.935}, 1E-03)) {
+        std::cerr << "ERROR: test 2 not passed.\n";
+        passed = false;
+    }
+
+    return passed;
+}
+
+bool equal(std::vector<double> a, std::vector<double> b, double eps) {
+    if (a.size() != b.size()) return false;
+    for (size_t i = 0; i < a.size(); ++i) {
+        if (std::abs(a[i] - b[i]) > eps) return false;
+    }
+    return true;
 }

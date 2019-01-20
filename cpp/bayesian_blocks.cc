@@ -34,6 +34,7 @@
 
 namespace BayesianBlocks {
 
+    // core utility
     bb::array blocks(bb::data_array data, bb::weights_array weights, const double p,
                      bool counter, bool benchmark) {
 
@@ -42,6 +43,10 @@ namespace BayesianBlocks {
         // sanity checks
         if (data.size() != weights.size()) {
             throw std::domain_error("ERROR: data and weights vectors are of different sizes");
+        }
+
+        if (data.size() == 0) {
+            throw std::invalid_argument("ERROR: empty arrays provided as input");
         }
 
         if (std::find_if(weights.begin(), weights.end(),

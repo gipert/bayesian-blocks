@@ -1,43 +1,24 @@
-using StatsBase#, Plots
-#import GR
+using StatsBase, DelimitedFiles, Test
 
 include("../bayesian_blocks.jl")
 
-function test(range=(100, 5300), approx=false, binning=1)
+data = readdlm("test.dat")[:,1]
 
-    gerda = Float32[]
-    gerda = readdlm("test.dat")[:,1]
-    gerda = gerda[(gerda .> range[1]) .& (gerda .< range[2])]
-    gerda = gerda[(gerda .< 2014) .| (gerda .> 2064)]
+edges = bayesian_blocks(data, logfitness=:cash, logprior=:p0, p0=0.01)
+@test edges ≈ [-3.48528, -1.87114, -1.36282, -0.677218,
+              0.659105, 1.39771, 4.06582, 5.60912,
+              6.17286, 7.76634, 9.91696 ] atol = 1E-04
 
-    if approx
-        h = fit(Histogram, gerda, range[1]:binning:range[2], closed = :left)
-    else
-        h = normalize(fit(Histogram, gerda, range[1]:0.1:range[2], closed = :left))
-    end
+edges = bayesian_blocks(data, logfitness=:cash, logprior=:gamma, gamma=0.01)
+@test edges ≈ [-3.48528, -2.9689, -1.74481, -1.12669,
+               -0.24271, 0.492523, 1.27286, 1.59163,
+               3.22158, 4.27094, 5.56663, 6.17286,
+               7.76634, 9.91696] atol = 1E-04
 
-    edges = bayesian_blocks(approx ? h : gerda,
-                            logfitness = :cash, logprior = :p0,
-                            p0 = 0.05)
+edges = bayesian_blocks(fit(Histogram, data, nbins=100, closed = :left),
+                        logfitness=:cash, logprior=:p0, p0=0.01)
+@test edges ≈ [-3.5, -3.1, -1.8, -1.2, -0.4, 0.4, 1.4, 3.6, 4.2, 5.6, 6.2, 7.8, 9.9]
 
-    hb = normalize(fit(Histogram, gerda, edges, closed = :left))
-
-    approx && (h = normalize(h))
-
-#    plot(
-#         [h, hb],
-#         st = :step,
-#         w = [1 3],
-#         linecolor = [:steelblue :orangered],
-#         yscale = :log10,
-#         lab = ["enriched detectors (1 keV)" "bayesian blocks (approx)"],
-#         legend = true,
-#         xlabel = "energy [keV]",
-#         ylabel = "frequency"
-#        )
-
-#    savefig("test.pdf")
-#    writedlm("edges.dat", hb.edges)
-
-    return h, hb
-end
+edges = bayesian_blocks(fit(Histogram, data, nbins=100, closed = :left),
+                        logfitness=:cash, logprior=:gamma, gamma=0.01)
+@test edges ≈ [-3.5, -3.1, -1.8, -1.2, -0.4, 0.4, 1.4, 3.6, 4.2, 5.6, 6.2, 7.8, 9.9]
