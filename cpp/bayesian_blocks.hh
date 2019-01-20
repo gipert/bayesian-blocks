@@ -30,8 +30,10 @@ namespace BayesianBlocks {
     // handy aliases
     namespace bb {
         // data containers
-        using vec  = std::vector<double>;
-        using pair = std::pair<double, double>;
+        using array         = std::vector<double>;
+        using data_array    = std::vector<double>;
+        using weights_array = std::vector<int>;
+        using pair          = std::pair<double, int>;
 
         // time
         using clock = std::chrono::high_resolution_clock;
@@ -40,11 +42,15 @@ namespace BayesianBlocks {
     }
 
     // core utility
-    bb::vec blocks(bb::vec data, bb::vec weights, const double p = 0.01,
-                   bool counter = false, bool benchmark = false);
+    bb::array blocks(bb::data_array data, bb::weights_array weights, const double p = 0.01,
+                     bool counter = false, bool benchmark = false);
+
+    bb::array blocks(bb::data_array data, const double p = 0.01,
+                     bool counter = false, bool benchmark = false);
 
     // rebin a ROOT histogram
-    TH1* rebin(TH1* h_in, const double p = 0.01, bool counter = false);
+    TH1* rebin(TH1* h_in, const double p = 0.01,
+               bool counter = false, bool banchmark = false);
 }
 
 #endif

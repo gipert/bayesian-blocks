@@ -30,7 +30,7 @@ is the implementation of the bayesian blocks algorithm, as outlined in [^1].
 ```julia
 using Distributions, StatsBase, Plots, LinearAlgebra
 
-data = vcat(rand(Normal(0),1000),rand(Cauchy(5),1000)
+data = vcat(rand(Normal(0),1000),rand(Cauchy(5),1000))
 data = data[(data .> -5) .& (data .< 10)]
 
 h = fit(Histogram, gerda, -5:100:10, closed = :left)
@@ -105,7 +105,6 @@ function bayesian_blocks(x;
 
     # save prior value for later computation
     ncp_prior = logp_dict[logprior]()
-    println(ncp_prior)
 
     # array of (all possible) block edges
     edges = vcat(x_unique[1],
@@ -140,7 +139,6 @@ function bayesian_blocks(x;
     while i != 0
         push!(cp, i)
         i = (i == 1 ? 0 : last[i-1])
-        println(i)
     end
 
     return [edges[j] for j in cp[end:-1:1]]
