@@ -1,6 +1,10 @@
-Makefile
 *.so
 *.pdf
+
+# gcov
+*.gcda
+*.gcno
+*.gcov
 
 # junk
 *.DS_Store
