@@ -11,8 +11,6 @@ branches:
   only:
     - master
 
-os: linux
-
 matrix:
   include:
 
@@ -28,7 +26,7 @@ matrix:
         - docker cp . "$DOCKER_INSTANCE:/root/bayesian-blocks"
       script:
         - docker exec "$DOCKER_INSTANCE" /bin/sh -c \
-            "cd /root/bayesian-blocks/cpp/test && ./run_tests.sh"
+            "ls /root && cd /root/bayesian-blocks/cpp/test && make test"
 
     - os: osx
       language: cpp
@@ -37,7 +35,7 @@ matrix:
         homebrew:
           packages:
             - root
-      script: cd cpp/test && ./run_tests.sh
+      script: cd cpp/test && make test
 
     - os: linux
       language: julia

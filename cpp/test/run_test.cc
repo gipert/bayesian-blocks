@@ -32,7 +32,6 @@ int main() {
     auto hr = dynamic_cast<TH1D*>(BayesianBlocks::rebin(&h, 0.01, false, true));
     auto edges = hr->GetXaxis()->GetXbins()->GetArray();
     std::vector<double> w(edges, edges + hr->GetNbinsX()+1);
-    for (auto& i : w) std::cout << i << " ";
 
     if (!equal(w, {-2.935, -1.7, -1.18, -0.66, 0.64, 1.42, 4.02, 5.58, 6.23, 7.79, 9.935}, 1E-03)) {
         std::cerr << "ERROR: test 2 not exit_status.\n";
