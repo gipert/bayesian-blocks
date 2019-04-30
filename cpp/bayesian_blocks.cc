@@ -169,7 +169,7 @@ namespace BayesianBlocks {
 
         // find first non-empty bin
         int i_first = 1;
-        for (int i = 1; i <= Nb; ++i ) {
+        for (int i = 1; i < Nb; ++i ) {
             if (h_in->GetBinContent(i) != 0) {
                 edges  .push_back(h_in->GetBinCenter(i));
                 x      .push_back(h_in->GetBinCenter(i));
@@ -180,7 +180,7 @@ namespace BayesianBlocks {
         }
 
         // fill arrays, skip empty bins
-        for (int i = i_first+1; i <= Nb; ++i ) {
+        for (int i = i_first+1; i < Nb; ++i ) {
             auto c = h_in->GetBinContent(i);
             if (floor(c) != ceil(c)) {
                 throw std::domain_error("ERROR: non-integer bin contents detected in input histogram");

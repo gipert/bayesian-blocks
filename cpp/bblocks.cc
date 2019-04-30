@@ -101,12 +101,24 @@ int main(int argc, char** argv) {
                 auto h = dynamic_cast<TH1*>(key->ReadObj());
                 if (h->GetDimension() == 1) {
                     glog(debug) << " ├─ " << h->GetName();
+
+                    bool found = false;
+                    for (int b = 1; b < h->GetNbinsX(); ++b) {
+                        auto c = h->GetBinContent(b);
+                        if (floor(c) != ceil(c)) {
+                            if (!found) std::cerr << " \033[93m✘\033[0m non-integer bin contents detected, they will be rounded.";
+                            h->SetBinContent(b, std::round(c));
+                            found = true;
+                        }
+                    }
+
+
                     TH1* hr;
                     try {
                         hr = dynamic_cast<TH1D*>(BayesianBlocks::rebin(h, p0, false, false));
                     }
                     catch(const std::exception& e) {
-                        if (level <= debug) std::cout << " \033[91m✘\033[0m " << e.what() << ". Skipping.\n";
+                        if (level <= debug) std::cerr << " \033[91m✘\033[0m " << e.what() << ". Skipping.\n";
                         continue;
                     }
                     hists.push_back(hr);
@@ -115,11 +127,14 @@ int main(int argc, char** argv) {
             }
         }
         glog(debug) << " └─ done\n";
-        TFile fout(("bb-" + f).c_str(), "recreate");
-        for (auto& i : hists) {
-            auto name = std::string(i->GetName());
-            name.erase(name.end()-2, name.end());
-            i->Write(name.c_str());
+
+        if (!hists.empty()) {
+            TFile fout(("bb-" + f).c_str(), "recreate");
+            for (auto& i : hists) {
+                auto name = std::string(i->GetName());
+                name.erase(name.end()-2, name.end());
+                i->Write(name.c_str());
+            }
         }
 
         glog(info) << "bb-" + f << " created\n";
