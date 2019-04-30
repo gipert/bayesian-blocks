@@ -50,7 +50,7 @@ namespace BayesianBlocks {
 
     // rebin a ROOT histogram
     TH1* rebin(TH1* h_in, const double p = 0.01,
-               bool counter = false, bool banchmark = false);
+               bool counter = false, bool benchmark = false);
 }
 
 #endif

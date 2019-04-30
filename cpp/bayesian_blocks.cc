@@ -78,7 +78,7 @@ namespace BayesianBlocks {
         assert(std::unique(edges.begin(), edges.end()) == edges.end());
 
         // let's use here Cash statistics and calibrated prior on number of change points
-        auto cash = [](double N_k, double T_k) { return N_k * std::log(N_k/T_k); };
+        auto cash = [](int N_k, double T_k) { return N_k * std::log(N_k/T_k); };
         auto ncp_prior = std::log(73.53 * p * std::pow(N, -0.478)) - 4;
 
         // arrays to store results
@@ -100,7 +100,7 @@ namespace BayesianBlocks {
             last[k] = std::distance(A.begin(), std::max_element(A.begin(), A.end()));
             best[k] = *(std::max_element(A.begin(), A.end()));
 
-            if (counter) std::cout << '\r' << k+1 << '/' << N << std::flush;
+            if (counter) std::cout << '\r' << k << '/' << N << std::flush;
         }
         if (counter) std::cout << std::endl;
 
@@ -181,19 +181,29 @@ namespace BayesianBlocks {
 
         // fill arrays, skip empty bins
         for (int i = i_first+1; i <= Nb; ++i ) {
-            if (h_in->GetBinContent(i) == 0) continue;
+            auto c = h_in->GetBinContent(i);
+            if (floor(c) != ceil(c)) {
+                throw std::domain_error("ERROR: non-integer bin contents detected in input histogram");
+            }
+            if (c == 0) continue;
             x      .push_back(h_in->GetBinCenter(i));
-            weights.push_back(h_in->GetBinContent(i));
+            weights.push_back(c);
         }
 
         auto result = BayesianBlocks::blocks(x, weights, p, counter, benchmark);
 
-        auto h_out = dynamic_cast<TH1*>(
-            h_in->Rebin(result.size()-1,
-                        (std::string(h_in->GetName()) + "_b").c_str(),
-                        &result[0]
-            )
+        auto h_out = new TH1D(
+            (std::string(h_in->GetName()) + "_b").c_str(), h_in->GetTitle(),
+            result.size()-1, &result[0]
         );
+
+        for (int b = 1; b < h_in->GetNbinsX(); ++b) {
+            auto c = h_in->GetBinContent(b);
+            auto bin = h_out->FindBin(h_in->GetBinCenter(b));
+            h_out->SetBinContent(bin, h_out->GetBinContent(bin) + c);
+        }
+        h_out->SetBinContent(0, h_in->GetBinContent(0));
+        h_out->SetBinContent(result.size()-1, h_in->GetBinContent(h_in->GetNbinsX()));
         h_out->Scale(1, "width");
 
         return h_out;
