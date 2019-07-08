@@ -1,6 +1,7 @@
 *.so
 *.pdf
 cpp/bblocks
+cpp/test/run_test
 
 # gcov
 *.gcda
