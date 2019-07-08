@@ -19,23 +19,24 @@ matrix:
       compiler: gcc
       sudo: required
       services: docker
-      env: DOCKER_IMAGE=rootproject/root-ubuntu16
+      env: DOCKER_IMAGE=gipert/root-cern:6.16.00
       before_install:
         - docker pull "$DOCKER_IMAGE"
         - export DOCKER_INSTANCE=`docker run -it -d "$DOCKER_IMAGE" /bin/bash`
         - docker cp . "$DOCKER_INSTANCE:/root/bayesian-blocks"
       script:
         - docker exec "$DOCKER_INSTANCE" /bin/sh -c \
-            "ls /root && cd /root/bayesian-blocks/cpp/test && make test"
+            "cd /root/bayesian-blocks/cpp/test && LD_LIBRARY_PATH=\$PWD make test"
 
     - os: osx
+      osx_image: xcode11
       language: cpp
       compiler: clang
       addons:
         homebrew:
-          packages:
-            - root
-      script: cd cpp/test && make test
+      script:
+        - brew install --force-bottle root
+        - cd cpp/test && make test
 
     - os: linux
       language: julia
