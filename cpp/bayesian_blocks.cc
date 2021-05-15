@@ -71,9 +71,9 @@ namespace BayesianBlocks {
 
         // build up array with all possible bin edges
         bb::array edges(N+1);
-                                              edges[0]   = data[0];
+        edges[0] = data[0];
         for (std::size_t i = 0; i < N-1; ++i) edges[i+1] = (data[i]+data[i+1])/2.;
-                                              edges[N]   = data[N-1];
+        edges[N] = data[N-1];
 
         assert(std::unique(edges.begin(), edges.end()) == edges.end());
 
@@ -109,7 +109,8 @@ namespace BayesianBlocks {
 
         // iteratively find the change points
         std::vector<int> cp;
-        for (auto i = N; i != 0; i = last[i-1]) cp.push_back(i); cp.push_back(0);
+        for (auto i = N; i != 0; i = last[i-1]) cp.push_back(i);
+        cp.push_back(0);
 
         std::reverse(cp.begin(), cp.end());
         bb::array result(cp.size(), 0);
@@ -209,5 +210,3 @@ namespace BayesianBlocks {
         return h_out;
     }
 }
-
-// vim: foldmethod=syntax
