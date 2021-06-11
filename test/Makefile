@@ -5,11 +5,8 @@ CFLAGS = -Wall -Wextra -Werror \
 
 LIBS = $(shell root-config --libs)
 
-run_test : run_test.cc libbayesian_blocks.so
-	$(CXX) $(CFLAGS) -o $@ $< $(LIBS) -lbayesian_blocks
-
-libbayesian_blocks.so : ../bayesian_blocks.cc ../bayesian_blocks.hh
-	$(CXX) $(CFLAGS) -fPIC -shared -o $@ $< $(LIBS)
+run_test : run_test.cc ../include/bayesian_blocks.hpp ../include/bayesian_blocks_root.hpp
+	$(CXX) $(CFLAGS) -o $@ $< $(LIBS)
 
 test : run_test
 	./run_test

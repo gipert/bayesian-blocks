@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 
-#include "bayesian_blocks.hh"
+#include "../include/bayesian_blocks_root.hpp"
 
 // ROOT
 #include "TObject.h"
@@ -65,6 +65,7 @@ int main(int argc, char** argv) {
         switch (opt) {
             case 1:
                 p0 = std::stod(optarg);
+                break;
             case 'v':
                 level = debug;
                 break;

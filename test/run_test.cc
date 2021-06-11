@@ -3,7 +3,7 @@
 #include <vector>
 #include <iterator>
 
-#include "../bayesian_blocks.hh"
+#include "../include/bayesian_blocks_root.hpp"
 #include "TFile.h"
 #include "TH1D.h"
 #include "TCanvas.h"
@@ -27,9 +27,11 @@ int main() {
     if (!equal(r, exp, 1E-04)) {
         std::cerr << "ERROR: test 1 failed.\n";
         std::cerr << "Expected: ";
-        for (auto& val : exp) std::cerr << val << ' '; std::cerr << std::endl;
+        for (auto& val : exp) std::cerr << val << ' ';
+        std::cerr << std::endl;
         std::cerr << "Got: ";
-        for (auto& val : r) std::cerr << val << ' '; std::cerr << std::endl;
+        for (auto& val : r) std::cerr << val << ' ';
+        std::cerr << std::endl;
         exit_status = 1;
     }
 
@@ -47,9 +49,11 @@ int main() {
     if (!equal(w, exp, 1E-03)) {
         std::cerr << "ERROR: test 2 failed:" << std::endl;
         std::cerr << "Expected: ";
-        for (auto& val : exp) std::cerr << val << ' '; std::cerr << std::endl;
+        for (auto& val : exp) std::cerr << val << ' ';
+        std::cerr << std::endl;
         std::cerr << "Got: ";
-        for (auto& val : w) std::cerr << val << ' '; std::cerr << std::endl;
+        for (auto& val : w) std::cerr << val << ' ';
+        std::cerr << std::endl;
         exit_status = 2;
     }
 

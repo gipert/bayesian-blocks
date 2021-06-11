@@ -17,20 +17,44 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#include "bayesian_blocks.hh"
-
+#include <vector>
+#include <chrono>
 #include <iostream>
 #include <cmath>
 #include <vector>
 #include <map>
 #include <algorithm>
 #include <numeric>
-#include <chrono>
 #include <stdexcept>
 #include <cassert>
 #include <limits>
 
-#include "TH1.h"
+#ifndef _BAYESIAN_BLOCKS_HH
+#define _BAYESIAN_BLOCKS_HH
+
+namespace BayesianBlocks {
+
+    // handy aliases
+    namespace bb {
+        // data containers
+        using array         = std::vector<double>;
+        using data_array    = std::vector<double>;
+        using weights_array = std::vector<int>;
+        using pair          = std::pair<double, int>;
+
+        // time
+        using clock = std::chrono::high_resolution_clock;
+        using std::chrono::duration_cast;
+        using us = std::chrono::microseconds;
+    }
+
+    // core utility
+    bb::array blocks(bb::data_array data, bb::weights_array weights, const double p = 0.01,
+                     bool counter = false, bool benchmark = false);
+
+    bb::array blocks(bb::data_array data, const double p = 0.01,
+                     bool counter = false, bool benchmark = false);
+}
 
 namespace BayesianBlocks {
 
@@ -71,9 +95,9 @@ namespace BayesianBlocks {
 
         // build up array with all possible bin edges
         bb::array edges(N+1);
-        edges[0] = data[0];
+        edges[0]   = data[0];
         for (std::size_t i = 0; i < N-1; ++i) edges[i+1] = (data[i]+data[i+1])/2.;
-        edges[N] = data[N-1];
+        edges[N]   = data[N-1];
 
         assert(std::unique(edges.begin(), edges.end()) == edges.end());
 
@@ -159,54 +183,6 @@ namespace BayesianBlocks {
 
         return BayesianBlocks::blocks(x, weights, p, counter, benchmark);
     }
-
-    TH1* rebin(TH1* h_in, const double p, bool counter, bool benchmark) {
-
-        // define variables
-        const auto Nb = h_in->GetNbinsX();
-        bb::data_array x;
-        bb::weights_array weights;
-        bb::array edges;
-
-        // find first non-empty bin
-        int i_first = 1;
-        for (int i = 1; i < Nb; ++i ) {
-            if (h_in->GetBinContent(i) != 0) {
-                edges  .push_back(h_in->GetBinCenter(i));
-                x      .push_back(h_in->GetBinCenter(i));
-                weights.push_back(h_in->GetBinContent(i));
-                i_first = i;
-                break;
-            }
-        }
-
-        // fill arrays, skip empty bins
-        for (int i = i_first+1; i < Nb; ++i ) {
-            auto c = h_in->GetBinContent(i);
-            if (floor(c) != ceil(c)) {
-                throw std::domain_error("ERROR: non-integer bin contents detected in input histogram");
-            }
-            if (c == 0) continue;
-            x      .push_back(h_in->GetBinCenter(i));
-            weights.push_back(c);
-        }
-
-        auto result = BayesianBlocks::blocks(x, weights, p, counter, benchmark);
-
-        auto h_out = new TH1D(
-            (std::string(h_in->GetName()) + "_b").c_str(), h_in->GetTitle(),
-            result.size()-1, &result[0]
-        );
-
-        for (int b = 1; b < h_in->GetNbinsX(); ++b) {
-            auto c = h_in->GetBinContent(b);
-            auto bin = h_out->FindBin(h_in->GetBinCenter(b));
-            h_out->SetBinContent(bin, h_out->GetBinContent(bin) + c);
-        }
-        h_out->SetBinContent(0, h_in->GetBinContent(0));
-        h_out->SetBinContent(result.size()-1, h_in->GetBinContent(h_in->GetNbinsX()));
-        h_out->Scale(1, "width");
-
-        return h_out;
-    }
 }
+
+#endif
