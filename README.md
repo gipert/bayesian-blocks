@@ -22,7 +22,7 @@ int main() {
 ```
 Check out the `BayesianBlocks::blocks` and `BayesianBlocks::rebin` signatures for a more advanced usage. Have a look at [`test/run_test.cc`](https://github.com/gipert/bayesian-blocks/blob/master/test/run_test.cc) too.
 
-Bayesian blocks algorithmScargle, J et al. (2012) [https://doi.org/10.1088/0004-637X/764/2/167] reference: *Scargle, J et al. (2012) [https://doi.org/10.1088/0004-637X/764/2/167]*
+Bayesian blocks algorithm reference: *Scargle, J et al. (2012) [https://doi.org/10.1088/0004-637X/764/2/167]*
 
 ## The `bblocks` utility
 
