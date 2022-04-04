@@ -75,9 +75,9 @@ namespace BayesianBlocks {
             auto bin = h_out->FindBin(h_in->GetBinCenter(b));
             h_out->SetBinContent(bin, h_out->GetBinContent(bin) + c);
         }
-        h_out->SetBinContent(0, h_in->GetBinContent(0));                                  //underflow bin
-        h_out->SetBinContent(result.size(), h_in->GetBinContent(h_in->GetNbinsX()));      //overflow bin
-        h_out->Scale(1, "width");       //divide values and errors by bin widths
+        h_out->SetBinContent(0, h_in->GetBinContent(0)); // underflow bin
+        h_out->SetBinContent(result.size(), h_in->GetBinContent(h_in->GetNbinsX())); // overflow bin
+        h_out->Scale(1, "width"); // make it a density by dividing contents and errors by bin widths
 
         return h_out;
     }
