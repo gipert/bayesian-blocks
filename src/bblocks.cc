@@ -53,6 +53,18 @@ std::pair<std::string, std::string> get_file_obj(std::string expr) {
     return std::pair<std::string, std::string>(filename, objname);
 }
 
+std::pair<std::string, std::string> split_dir_file(std::string expr) {
+    std::string directory, file;
+    if (expr.back() == '/') expr.pop_back();
+    if (expr.find('/') != std::string::npos) {
+        directory = expr.substr(0, expr.find_last_of('/'));
+        file = expr.substr(expr.find_last_of('/')+1, std::string::npos);
+    }
+    else directory = expr;
+
+    return std::pair<std::string, std::string>(directory, file);
+}
+
 int main(int argc, char** argv) {
 
     std::string progname(argv[0]);
@@ -174,7 +186,7 @@ int main(int argc, char** argv) {
         glog(debug) << " └─ done\n";
 
         if (!hists.empty()) {
-            TFile fout(("bb-" + file_obj.first).c_str(), "recreate");
+            TFile fout(("bb-" + (split_dir_file(file_obj.first)).second).c_str(), "recreate");
             for (auto& i : hists) {
                 auto name = std::string(i->GetName());
                 name.erase(name.end()-2, name.end());
