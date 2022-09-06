@@ -34,6 +34,10 @@ namespace BayesianBlocks {
 
     TH1* rebin(TH1* h_in, const double p, bool counter, bool benchmark) {
 
+        if (h_in->GetDimension() != 1) {
+            throw std::invalid_argument("ERROR: only one-dimensional histograms are supported");
+        }
+
         // define variables
         const auto Nb = h_in->GetNbinsX();
         bb::data_array x;
