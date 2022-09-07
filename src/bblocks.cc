@@ -186,15 +186,15 @@ int main(int argc, char** argv) {
         glog(debug) << " └─ done\n";
 
         if (!hists.empty()) {
-            TFile fout(("bb-" + (split_dir_file(file_obj.first)).second).c_str(), "recreate");
+            auto outfile = "bb-" + (split_dir_file(file_obj.first)).second;
+            TFile fout(outfile.c_str(), "update");
             for (auto& i : hists) {
                 auto name = std::string(i->GetName());
                 name.erase(name.end()-2, name.end());
                 i->Write(name.c_str());
             }
+            glog(info) << outfile << " written\n";
         }
-
-        glog(info) << "bb-" + file_obj.first << " created\n";
     }
     return 0;
 }
