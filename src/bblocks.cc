@@ -60,7 +60,7 @@ std::pair<std::string, std::string> split_dir_file(std::string expr) {
         directory = expr.substr(0, expr.find_last_of('/'));
         file = expr.substr(expr.find_last_of('/')+1, std::string::npos);
     }
-    else directory = expr;
+    else file = expr;
 
     return std::pair<std::string, std::string>(directory, file);
 }
@@ -158,6 +158,10 @@ int main(int argc, char** argv) {
         else {
             auto h = dynamic_cast<TH1*>(_tmp.Get(file_obj.second.c_str()));
             if (!h) throw std::runtime_error("Could not read object '" + file_obj.second + "' in file as histogram");
+
+            TString tmp_file_obj(file_obj.second);
+            tmp_file_obj.ReplaceAll('/', '_');
+            h->SetName(tmp_file_obj);
 
             glog(debug) << " ├─ " << h->GetName();
 
