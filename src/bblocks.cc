@@ -41,6 +41,7 @@ std::ostream& glog(log_level lvl) {
     }
 };
 
+// parse items in the format file.root:object
 std::pair<std::string, std::string> get_file_obj(std::string expr) {
     std::string filename;
     std::string objname = "";
@@ -53,6 +54,7 @@ std::pair<std::string, std::string> get_file_obj(std::string expr) {
     return std::pair<std::string, std::string>(filename, objname);
 }
 
+// splits filename from path
 std::pair<std::string, std::string> split_dir_file(std::string expr) {
     std::string directory, file;
     if (expr.back() == '/') expr.pop_back();
@@ -73,16 +75,22 @@ int main(int argc, char** argv) {
         std::cerr << "USAGE: " << progname << " [-v|--verbose] [-h|--help] [--p0 <val> (default 0.01)] file|file:obj [file2...]\n";
     };
 
-    const char* const short_opts = ":vh";
+    const char* const short_opts = "o:usvh";
     const option long_opts[] = {
         { "p0",      required_argument, nullptr, 1   },
+        { "output",  required_argument, nullptr, 'o' },
+        { "uniform", no_argument,       nullptr, 'u' },
+        { "samedir", no_argument,       nullptr, 's' },
         { "verbose", no_argument,       nullptr, 'v' },
         { "help",    no_argument,       nullptr, 'h' },
         { nullptr,   no_argument,       nullptr, 0   }
     };
 
-    // default p0 value
+    // defaults
     double p0 = 0.01;
+    std::string outfile = "";
+    bool uniform = false;
+    bool samedir = false;
 
     int opt = 0;
     while ((opt = getopt_long(argc, argv, short_opts, long_opts, nullptr)) != -1) {
@@ -90,11 +98,22 @@ int main(int argc, char** argv) {
             case 1:
                 p0 = std::stod(optarg);
                 break;
+            case 'o':
+                outfile = std::string(optarg);
+                break;
+            case 'u':
+                uniform = true;
+                break;
+            case 's':
+                samedir = true;
+                break;
             case 'v':
                 level = debug;
                 break;
-            case 'h': // -h or --help
             case '?': // Unrecognized option
+                glog(error) << "ERROR: unrecognized option!" << std::endl;
+                return 1;
+            case 'h': // -h or --help
             default:
                 usage();
                 return 1;
@@ -102,6 +121,7 @@ int main(int argc, char** argv) {
     }
 
     if (p0 != 0.01) glog(debug) << "p0 set to " << p0 << std::endl;
+    if (!outfile.empty()) glog(debug) << "custom output file set to " << outfile << std::endl;
 
     // extra arguments
     std::vector<std::string> args;
@@ -110,7 +130,10 @@ int main(int argc, char** argv) {
     }
     if (args.empty()) {usage(); return 1;}
 
+    TArrayD saved_edges;
+
     // iterate over files
+    // if no output filename is specified make an output file for each file
     for (auto& f : args) {
         glog(debug) << f << std::endl;
 
@@ -120,6 +143,8 @@ int main(int argc, char** argv) {
         // open file
         TFile _tmp(file_obj.first.c_str(), "read");
 
+        // if no object is specified, try processing all histograms in the file
+        // will be saved in the same output file
         if (file_obj.second.empty()) {
             TIter next(_tmp.GetListOfKeys());
             TKey* key;
@@ -155,6 +180,7 @@ int main(int argc, char** argv) {
                 }
             }
         }
+        // otherwise, process that object only
         else {
             auto h = dynamic_cast<TH1*>(_tmp.Get(file_obj.second.c_str()));
             if (!h) throw std::runtime_error("Could not read object '" + file_obj.second + "' in file as histogram");
@@ -165,24 +191,33 @@ int main(int argc, char** argv) {
 
             glog(debug) << " ├─ " << h->GetName();
 
-            bool found = false;
-            for (int b = 1; b < h->GetNbinsX(); ++b) {
-                auto c = h->GetBinContent(b);
-                if (floor(c) != ceil(c)) {
-                    if (!found) std::cerr << " \033[93m✘\033[0m non-integer bin contents detected, they will be rounded.";
-                    h->SetBinContent(b, std::round(c));
-                    found = true;
-                }
-            }
-
-
             TH1* hr;
-            try {
-                hr = dynamic_cast<TH1D*>(BayesianBlocks::rebin(h, p0, false, false));
+            // use edges from first histogram
+            if (saved_edges.GetSize() > 0 and uniform == true) {
+                hr = h->Rebin(saved_edges.GetSize()-1, tmp_file_obj, saved_edges.GetArray());
+                hr->Scale(1, "width");
+                std::cout << " (using cached bin edges)";
             }
-            catch(const std::exception& e) {
-                if (level <= debug) std::cerr << " \033[91m✘\033[0m " << e.what() << ". Skipping.\n";
-                continue;
+            // compute edges
+            else {
+                bool found = false;
+                for (int b = 1; b < h->GetNbinsX(); ++b) {
+                    auto c = h->GetBinContent(b);
+                    if (floor(c) != ceil(c)) {
+                        if (!found) std::cerr << " \033[93m✘\033[0m non-integer bin contents detected, they will be rounded.";
+                        h->SetBinContent(b, std::round(c));
+                        found = true;
+                    }
+                }
+
+                try {
+                    hr = dynamic_cast<TH1D*>(BayesianBlocks::rebin(h, p0, false, false));
+                    saved_edges = *hr->GetXaxis()->GetXbins();
+                }
+                catch(const std::exception& e) {
+                    if (level <= debug) std::cerr << " \033[91m✘\033[0m " << e.what() << ". Skipping.\n";
+                    continue;
+                }
             }
             hists.push_back(hr);
             if (level <= debug) std::cout << " \033[92m✔\033[0m\n";
@@ -190,14 +225,22 @@ int main(int argc, char** argv) {
         glog(debug) << " └─ done\n";
 
         if (!hists.empty()) {
-            auto outfile = "bb-" + (split_dir_file(file_obj.first)).second;
-            TFile fout(outfile.c_str(), "update");
+            std::string outname;
+            if (!outfile.empty())
+                outname = outfile;
+            else {
+                outname = "bb-" + (split_dir_file(file_obj.first)).second;
+                if (samedir) outname = (split_dir_file(file_obj.first)).first + "/" + outname;
+            }
+            TFile fout(outname.c_str(), "update");
             for (auto& i : hists) {
                 auto name = std::string(i->GetName());
-                name.erase(name.end()-2, name.end());
+                if (*(name.end()-1) == 'b' and *(name.end()-2) == '_') {
+                    name.erase(name.end()-2, name.end());
+                }
                 i->Write(name.c_str());
             }
-            glog(info) << outfile << " written\n";
+            glog(info) << outname << " written\n";
         }
     }
     return 0;
